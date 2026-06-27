@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+
+{% block title %}DocSearch — Query{% endblock %}
+
+{% block content %}
+
+  <!-- Search form -->
+  <section class="search-section">
+    <form class="search-form" method="GET" action="{{ url_for('index') }}">
+      <label class="search-label" for="query">search docs</label>
+      <div class="search-row">
+        <input
+          class="search-input"
+          id="query"
+          type="text"
+          name="q"
+          placeholder="meow..."
+          value="{{ query | default('') }}"
+          autofocus
+        />
+        <button class="btn btn-search" type="submit">search</button>
+      </div>
+
+      {% if top_k is defined %}
+        <div class="search-options">
+          <label class="option-label" for="top_k">results</label>
+          <select class="select-topk" id="top_k" name="top_k">
+            {% for k in [3, 5, 10, 20] %}
+              <option value="{{ k }}" {% if top_k == k %}selected{% endif %}>{{ k }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      {% endif %}
+    </form>
+  </section>
+
+  <!-- Results -->
+  {% if results is defined %}
+    {% if results %}
+      <section class="results-section">
+        <p class="results-meta">{{ results | length }} result{{ 's' if results | length != 1 }} for <em>{{ query }}</em></p>
+
+        <ol class="result-list">
+          {% for result in results %}
+            <li class="result-card">
+              <a class="result-link" href="{{ url_for('result_detail', result_id=result.id) }}">
+                <div class="result-header">
+                  <span class="result-title">{{ result.title | default('untitled') }}</span>
+                  <span class="result-score">{{ '%.3f' | format(result.score) }}</span>
+                </div>
+                <p class="result-snippet">{{ result.snippet }}</p>
+                <span class="result-source">{{ result.source_url }}</span>
+              </a>
+            </li>
+          {% endfor %}
+        </ol>
+      </section>
+
+    {% elif query %}
+      <section class="results-section">
+        <p class="results-empty">no results for <em>{{ query }}</em> — try different terms or index more docs.</p>
+      </section>
+    {% endif %}
+
+  {% else %}
+    <!-- Shown before any query is made -->
+    <section class="results-section results-section--idle">
+      <p class="idle-hint">enter a query above to search indexed docs.</p>
+    </section>
+  {% endif %}
+
+{% endblock %}
