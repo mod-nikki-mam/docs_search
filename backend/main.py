@@ -3,36 +3,54 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.exceptions import HTTPException
-from database_handling import engine, get_db, Base
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text, select
 from models import Doc, Repo
-from chunk import chunk_general
-import tempfile
+from jinja import Jinja2Templates
+from typing import Any
+import vecdb
+import os
 
 app = FastAPI()
 
+app.mount("/static", StaticFiles(directory="../frontend/public/"), name="static")
+templates = Jinja2Templates(directory="../frontend/templates")
+
+LOCAL_DOCS_FOLDER = "./docs_local/"
+LOCAL_DB = "./database/"
+QDRANT_URL = ""
+QDRANT_API = ""
+
 
 @app.on_event("startup")
-async def create_tables():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
+async def create_collection():
+    app.state.db = vecdb.VectorDB(LOCAL_DB, url=QDRANT_URL, api=QDRANT_API)
+    app.state.db.sync_from_roots(LOCAL_DOCS_FOLDER)
 
 
-@app.get("/ping_db")
-async def ping_db(db: AsyncSession = Depends(get_db)):
-    result = await db.execute(text("SELECT 1"))
-    return {"ok": result.scalar() == 1}
+@app.get("/get_repo_list", name="get_repo_list")
+async def get_repo_list(request: Request):
+    existing_repos: list[Repo] | None = os.scandir(LOCAL_DOCS_FOLDER)
+    return existing_repos
 
 
 @app.get("/", name="index", response_class=HTMLResponse)
-async def index_page(request: Request, db: AsyncSession = Depends(get_db)):
-    existing_repos: list[Repo] | None = (await db.execute(select(Repo))).scalars().all()
-    return {"request": request, "repos": existing_repos}
+async def index_page(request: Request):
+    return templates.TemplateResponse(
+        "index.html", {"request": request, "repos": get_repo_list}
+    )
 
 
-@app.post("/ingest", name="ingest", response_class=HTMLResponse)
-async def ingest_docs(
-    request: Request, doc_url: str = Form(...), db: AsyncSession = Depends(get_db)
-):
+@app.post("/search")
+async def search(query: str, k: int = 3, hybrid: bool = True) -> list[dict[str, Any]]:
+    return app.state.db.search(query=query, k=k, hybrid=hybrid)
+
+
+@app.post("/re_sync")
+async def re_sync():
+    app.state.db.sync_from_roots(LOCAL_DOCS_FOLDER)
+
+
+@app.post("/ingest_docs", name="ingest")
+async def ingest_docs(request: Request, doc_url: str = Form(...)):
     pass

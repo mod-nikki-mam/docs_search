@@ -6,7 +6,7 @@ pkgs.mkShell {
     (python313.withPackages (
       p: with p; [
         qdrant-client
-        git
+        gitpython
         textual
         ipython
         fastembed
