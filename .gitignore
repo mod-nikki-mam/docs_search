@@ -1,7 +1,8 @@
-docs/*
-docs_local/*
+**/docs/*
+**/docs_local/*
 *.env
-database/*
-qdrant_storage/*
+**/database/*
+**/qdrant_storage/*
 nvim.log
-fastembed_model_cache/*
+**/fastembed_model_cache/*
+**/__pycache__/*

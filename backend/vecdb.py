@@ -8,7 +8,7 @@ from fastembed import SparseTextEmbedding, TextEmbedding
 from qdrant_client import QdrantClient
 from qdrant_client.http import models as rest
 
-from chunk import chunk
+from chunk import chunk_general
 
 
 class SearchResult(NamedTuple):
@@ -98,6 +98,8 @@ class VectorDB:
         Dense embedding model name (fastembed).
     query_instruction:
         Prepended to queries for instruction-tuned embedders.
+    hybrid:
+        default true,uses hybrid search
     cache_dir, parallel, batch_size:
         Passed to fastembed's TextEmbedding.
     """
@@ -113,14 +115,16 @@ class VectorDB:
         collection: str = "embeddings",
         dims: int = 768,
         model: str | None = None,
-        cache_dir: Path | None = None,
+        cache_dir: Path | None = "./fastembed_model_cache/",
         parallel: int | None = None,
         query_instruction: str | None = None,
         batch_size: int | None = None,
+        hybrid: bool = True,
     ) -> None:
         self.collection = collection
         self.dims = dims
         self.model = model or self.DEFAULT_MODEL
+        self.hybrid = hybrid
 
         self._query_instruction = (
             query_instruction
@@ -139,10 +143,10 @@ class VectorDB:
         else:
             self._client = QdrantClient(path=str(db_path))
 
-        #  Embedders
+        #  embedders
         embedder_kwargs: dict[str, Any] = {
             "model_name": self.model,
-            "cache_dir": str(cache_dir) if cache_dir else None,
+            "cache_dir": str(cache_dir),
         }
         if parallel is not None:
             embedder_kwargs["parallel"] = parallel
@@ -158,7 +162,6 @@ class VectorDB:
             )
         else:
             self._sparse_embedder = None
-
         self._ensure_collection()
 
     # Internal helpers
@@ -202,7 +205,7 @@ class VectorDB:
             return " "
         return f"Instruct: {self._query_instruction}\nQuery: {normalized}"
 
-    def _dense_embed(self, texts: list[str]) -> list[list[float]]:
+    def _dense_embed(self, texts: list[str]) -> list[float]:
         stripped = [t.strip() or " " for t in texts]
         return [v.tolist() for v in self._dense_embedder.embed(stripped)]
 
@@ -353,10 +356,8 @@ class VectorDB:
             return None
         self.delete_by_source(source)
         text = path.read_text(encoding=encoding, errors="replace")
-        chunks = chunk(content=text, suffix=path.suffix)
+        chunks = chunk_general(text=text)
         return self.add_many(texts=chunks, source=source, source_mtime=mtime)
-
-    # Search
 
     def search(
         self, query: str, k: int = 5, hybrid: bool = True
@@ -382,12 +383,13 @@ class VectorDB:
 
     def _dense_search(self, query: str, k: int) -> list[SearchResult]:
         dense_vec = self._dense_embed([query])[0]
-        hits = self._client.search(
+        hits = self._client.query_points(
             collection_name=self.collection,
-            query_vector=((_DENSE_VECTOR, dense_vec)),
+            query=dense_vec,
             limit=k,
+            using=_DENSE_VECTOR,
             with_payload=True,
-        )
+        ).points
         return [
             SearchResult(
                 id=i,

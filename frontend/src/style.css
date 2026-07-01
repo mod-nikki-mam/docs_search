@@ -1,0 +1,201 @@
+Screen {
+    background: transparent !important;
+}
+
+#sidebar {
+    width: 26;
+    min-width: 20;
+    max-width: 40;
+    border-right: solid #FF2D6A;
+    padding: 1 0;
+    background: #FF2D6A 5%;
+}
+
+#sidebar-title {
+    text-style: bold;
+    color: #FF2D6A;
+    padding: 0 1 1 1;
+    text-align: center;
+}
+
+.repo-label {
+    padding: 0 1;
+    color: #FFFFFF 35%;
+    height: 1;
+}
+
+.repo-label:hover {
+    background: #FF2D6A 30%;
+    color: #FFFFFF;
+}
+
+#content-area {
+    width: 1fr;
+    height: 1fr;
+    padding: 1 2;
+}
+
+#placeholder-label {
+    color: #FFFFFF 30%;
+    text-style: italic;
+    text-align: center;
+    width: 1fr;
+}
+
+#bottom-bar {
+    dock: bottom;
+    height: auto;
+    padding: 0 1;
+    border-top: solid #FF2D6A;
+    background: transparent;
+}
+
+#search-input {
+    width: 1fr;
+    margin: 1 0;
+    background: #FFFFFF 10%;
+    color: #FFFFFF;
+}
+
+Button {
+    background: #FF2D6A;
+    color: #FFFFFF;
+    margin: 1 0 1 1;
+    &:hover {
+        background: #00D4FF;
+    }
+}
+
+#hybrid-btn {
+    min-width: 8;
+    border: none;
+    outline: none;
+}
+
+#hybrid-btn.toggle-active {
+    background: #FF2D6A;
+    color: #FFFFFF;
+}
+
+#hybrid-btn.toggle-active:hover {
+    background: #00D4FF;
+    color: #FFFFFF;
+}
+
+#hybrid-btn.toggle-active:focus {
+    background: #FF2D6A;
+    color: #FFFFFF;
+    text-style: none;
+    border: none;
+    outline: none;
+}
+
+#hybrid-btn.toggle-inactive {
+    background: #FFFFFF 15%;
+    color: #FFFFFF 30%;
+}
+
+#hybrid-btn.toggle-inactive:hover {
+    background: #FFFFFF 30%;
+    color: #FFFFFF 60%;
+}
+
+#hybrid-btn.toggle-inactive:focus {
+    background: #FFFFFF 15%;
+    color: #FFFFFF 30%;
+    text-style: none;
+    border: none;
+    outline: none;
+}
+
+#k-select {
+    width: 10;
+    max-width: 10;
+    margin: 1 0 1 1;
+    background: #FF2D6A 20%;
+    color: #FFFFFF;
+    border: none;
+    outline: none;
+    &:focus {
+        border: none;
+        outline: none;
+    }
+}
+
+Select > .select-prompt {
+    color: #FFFFFF 40%;
+}
+
+Select > .select-value {
+    color: #FFFFFF;
+}
+
+.result-card {
+    padding: 1;
+    border: solid #ff2d6a;
+    margin-bottom: 1;
+    background: #FFFFFF 5%;
+    &:hover {
+        background: #FF2D6A 80%;
+        border: solid #FF2D6A;
+    }
+}
+
+#source-header {
+    text-style: bold;
+    color: #00D4FF;
+    padding: 0 0 1 0;
+    border-bottom: solid #FF2D6A;
+    margin-bottom: 1;
+}
+
+.status-msg {
+    color: #FF2D6A;
+    text-style: italic;
+    text-align: center;
+    width: 1fr;
+}
+
+.error-msg {
+    color: #FF2D6A;
+    text-align: center;
+    width: 1fr;
+}
+
+Markdown {
+    background: transparent;
+    color: #FFFFFF 35%;
+    margin: 1 0;
+}
+
+Markdown H1, Markdown H2, Markdown H3,
+Markdown H4, Markdown H5, Markdown H6 {
+    color: #00D4FF;
+    text-style: bold;
+    margin: 1 0;
+}
+
+Markdown H1 { color: #FF2D6A; }
+
+Markdown A {
+    color: #00D4FF;
+}
+
+Markdown Code {
+    background: #FFFFFF 10%;
+    color: #FF2D6A;
+}
+
+Markdown BlockQuote {
+    border-left: solid #FF2D6A;
+    color: #FFFFFF 50%;
+    padding: 0 1;
+}
+
+Markdown ListItem {
+    color: #FFFFFF 35%;
+}
+
+Markdown HorizontalRule {
+    color: #FF2D6A 50%;
+}

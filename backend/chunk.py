@@ -1,7 +1,90 @@
 import re
 
 
-def chunk(
+def chunk_general(
+    text: str,
+    *,
+    min_chunk_chars: int = 80,
+    max_chunk_chars: int = 2000,
+) -> list[str]:
+    """
+    Split file content into chunks by paragraph for focused retrieval.
+
+    - .md: split by ## / ### headers; fallback to paragraphs
+        also removes yaml frontmatter
+    - .py: split by top-level def/class definitions
+    - .txt / other: split by double-newline paragraphs
+    """
+    content = text.strip()
+    if not content:
+        return []
+
+    def _merge_small(chunks: list[str]) -> list[str]:
+        """Merge chunks smaller than min_chunk_chars with the next chunk."""
+        out: list[str] = []
+        buf = ""
+        for c in chunks:
+            c = c.strip()
+            if not c:
+                continue
+            if (
+                buf
+                and len(buf) < min_chunk_chars
+                and len(buf) + len(c) <= max_chunk_chars
+            ):
+                buf = f"{buf}\n\n{c}"
+            else:
+                if buf:
+                    out.append(buf)
+                buf = c
+        if buf:
+            out.append(buf)
+        return out
+
+    def _split_large(chunks: list[str]) -> list[str]:
+        """Split chunks larger than max_chunk_chars by paragraphs."""
+        out: list[str] = []
+        for c in chunks:
+            if len(c) <= max_chunk_chars:
+                out.append(c)
+                continue
+            parts = re.split(r"\n\n+", c)
+            buf = ""
+            for p in parts:
+                if buf and len(buf) + len(p) + 2 <= max_chunk_chars:
+                    buf = f"{buf}\n\n{p}"
+                else:
+                    if buf:
+                        out.append(buf)
+                    buf = p
+            if buf:
+                out.append(buf)
+        return out
+
+    chunks: list[str] = []
+
+    if content.startswith("---"):
+        end = content.find("\n---", 3)
+        if end != -1:
+            content = content[end + 4 :].strip()  # removing YAML frontmatter
+    parts = re.split(r"(?=^#{2,3}\s+.+$)", content, flags=re.MULTILINE)
+    for p in parts:
+        p = p.strip()
+        if p:
+            chunks.append(p)
+    if not chunks:
+        chunks = re.split(r"\n\n+", content)
+
+    chunks = [c.strip() for c in chunks if c.strip()]
+    chunks = _merge_small(chunks)
+    chunks = _split_large(chunks)
+    result = [c for c in chunks if len(c) >= min_chunk_chars]
+    if not result and content.strip():
+        return [content.strip()]
+    return result
+
+
+def chunk_docs(
     text: str,
     min_chunk_chars: int = 2,
     max_chunk_chars: int = 8000,

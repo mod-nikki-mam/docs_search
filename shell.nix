@@ -8,8 +8,10 @@ pkgs.mkShell {
         qdrant-client
         gitpython
         textual
+        textual-dev
         ipython
         fastembed
+        docker
         uvicorn
         fastapi
         pydantic
