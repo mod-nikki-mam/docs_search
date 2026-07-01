@@ -1,4 +1,5 @@
 import os
+from dotenv import load_dotenv
 import docker
 from qdrant_client import QdrantClient
 from typing import Any
@@ -10,10 +11,12 @@ from fastapi.exceptions import HTTPException
 
 import vecdb
 
+load_dotenv()
 LOCAL_DOCS_FOLDER = "./docs_local/"
 LOCAL_DB = "./database/"
 QDRANT_URL = "http://localhost:6333/"
-QDRANT_API = "wGjDSdoW8@2t@A"
+QDRANT_API_KEY = os.getenv("QDRANT_API_KEY")
+QDRANT_STORAGE_PATH = os.getenv("QDRANT_STORAGE_PATH")
 
 
 @asynccontextmanager
@@ -31,7 +34,7 @@ async def lifespan(app):
             name="qdrant_docs_search",
             ports={"6333/tcp": 6333, "6334/tcp": 6334},
             volumes={
-                "/home/claude/docs_search/qdrant_storage": {
+                QDRANT_STORAGE_PATH: {
                     "bind": "/qdrant/storage",
                     "mode": "rw",
                 }
@@ -48,7 +51,7 @@ async def lifespan(app):
         except Exception as e:
             print(e)
             time.sleep(1)
-    app.state.db = vecdb.VectorDB(LOCAL_DB, url=QDRANT_URL, api_key=QDRANT_API)
+    app.state.db = vecdb.VectorDB(LOCAL_DB, url=QDRANT_URL, api_key=QDRANT_API_KEY)
     app.state.db.sync_from_roots(LOCAL_DOCS_FOLDER)
     yield
     app.state.db.close()
